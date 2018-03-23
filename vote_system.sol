@@ -1,5 +1,7 @@
 pragma solidity ^0.4.18;
 
+// TODO: title comment
+
 contract VoteSystem {
     
     uint256 public vote_duration = 345600; // 5760 blocks/day >> 5760 * 30 * 2 = 345600 blocks/2months.
@@ -7,30 +9,41 @@ contract VoteSystem {
     uint256 public last_vote_index = 0;
     uint256 public voting_threshold = 10e19; // 10 ETC.
     
-    mapping (address => bool) muted; // Prevents recursive calls.
+    mapping (address => bool)     muted; // Prevents recursive calls.
     
-    mapping (uint256 => proposal) public vote_proposals;
+    mapping (uint256 => proposal) public vote_proposals; // Mapping that preserves proposals.
     
-    mapping (address => voter)  public voters;
+    mapping (address => voter)    public voters;         // Mapping that preserves voter addresses.
     
     struct result
     {
-        string option_name;
-        bool transaction; // true = execute a transaction, false = cast an event
+        string option_name; // This is displayed to end user "Do you want to vote for <option_name>?".
+        bool transaction;   // True = execute a transaction, false = cast an event.
         
-        address to;
-        bytes   data;
-        uint256 weight; // how much this is voted FOR
-        //uint256 value;    // always 0 for ETC votes.
+        address to;         // Address that will be called if the voting
+                            // is intended to end with a transaction execution.
+                            
+        bytes   data;       // Transaction `dat`a if the voting is intended 
+                            // to end with a transaction execution.
+                            
+        uint256 weight;     // How much this is voted FOR.
+        
+        //uint256 value;    // Always 0 for ETC votes.
     }
     
     struct proposal
     {
-        result[] results;
-        address  master;
-        string   description;
-        uint256  timestamp;
-        bool     active;
+        result[] results;      // Array of options that are available for vote.
+                               // Example: Reduce block reward?
+                               //          [0] to 1 ETC per block.
+                               //          [2] to 2 ETC per block.
+                               //          [3] leave as is.
+    
+        address  master;       // Voting creator.
+        string   description;  // Description of the voting purpose.
+                               // Example: "This is a voting to reduce block reward on ETC."
+        uint256  timestamp;    // From this time, the voting is considered "active".
+        bool     active;       // True >> currently votable, false << not votable.
     }
     
     struct voter
