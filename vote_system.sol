@@ -103,7 +103,7 @@ contract VoteSystem {
     }
     
     /**
-    * @dev Submits a configured proposal for voting. Auto votes with creators stake instantly..
+    * @dev Submits a configured proposal for voting. Auto votes with creators stake instantly.
     *
     * @param _id           Proposal identificator.
     * @param _result_id    Result option that author is willing to vote for.
@@ -115,6 +115,12 @@ contract VoteSystem {
         vote(_id, _result_id, msg.sender);
     }
     
+    /**
+    * @dev Cast a vote for a certain proposal. Locks msg.sender's funds for certain period of time.
+    *
+    * @param _id           Proposal identificator.
+    * @param _result_id    Result option that voter is willing to vote for.
+    */
     function cast_vote( uint256 _id, uint256 _result_id ) payable
     {
         require( is_active(_id) );
