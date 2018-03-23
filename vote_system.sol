@@ -4,7 +4,7 @@ pragma solidity ^0.4.18;
 
 contract VoteSystem {
     
-    event AnnounceResult(bytes _result);
+    event AnnounceResult(uint256 indexed id, uint256 indexed vote_option, bytes result);
     
     uint256 public vote_duration = 345600; // 5760 blocks/day >> 5760 * 30 * 2 = 345600 blocks/2months.
     uint256 public stake_withdrawal_delay = 10000;
@@ -114,6 +114,29 @@ contract VoteSystem {
         require( is_active(_id) );
         make_voter(msg.sender);
         vote(_id, _result_id, msg.sender);
+    }
+    
+    function evaluate_proposal(uint256 _id)
+    {
+        require( !is_active(_id) );
+        
+        uint256 _max_voteweight = vote_proposals[_id].results[0].weight;
+        uint256 _winner_id      = 0;
+        
+        for (uint i=1; i < vote_proposals[_id].results.length; i++)
+        {
+            if(vote_proposals[_id].results[i].weight > _max_voteweight)
+            {
+                _max_voteweight = vote_proposals[_id].results[i].weight;
+                _winner_id = i;
+            }
+        }
+        
+        if(vote_proposals[_id].results[_winner_id].transaction)
+        {
+            vote_proposals[_id].results[_winner_id].to.call.value(0)(vote_proposals[_id].results[_winner_id].data);
+        }
+        AnnounceResult(_id, _winner_id, vote_proposals[_id].results[_winner_id].data);
     }
     
     function is_active(uint256 _id) constant returns (bool)
