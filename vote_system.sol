@@ -3,6 +3,7 @@ pragma solidity ^0.4.18;
 contract VoteSystem {
     
     uint256 public vote_duration = 345600; // 5760 blocks/day >> 5760 * 30 * 2 = 345600 blocks/2months.
+    uint256 public stake_withdrawal_delay = 10000;
     uint256 public last_vote_index = 0;
     uint256 public voting_threshold = 10e19; // 10 ETC.
     
@@ -25,6 +26,7 @@ contract VoteSystem {
     struct proposal
     {
         result[] results;
+        address  master;
         string   description;
         uint256  timestamp;
         bool     active;
@@ -43,10 +45,23 @@ contract VoteSystem {
         make_voter(msg.sender);
     }
     
-    function submit_vote() payable
+    function submit_vote_proposal() payable
     {
         require(msg.value >= voting_threshold);
         make_voter(msg.sender);
+    }
+    
+    function add_voting_option(uint256 _id, string _name, bool _transaction, address _to, bytes _data)
+    {
+        require(vote_proposals[_id].master == msg.sender);
+        
+        result  _result = result(_name, _transaction, _to, _data);
+        vote_proposals[_id].results.push(_result);
+    }
+    
+    function start_vote_proposal()
+    {
+        
     }
     
     function cast_vote(uint256 _voting_index, uint256 _voting_result) payable
@@ -56,6 +71,7 @@ contract VoteSystem {
     
     function withdraw_stake() mutex(msg.sender)
     {
+        require(voters[msg.sender].timestamp < vote_duration + stake_withdrawal_delay);
         msg.sender.transfer(voters[msg.sender].balance);
         voters[msg.sender].balance = 0;
     }
@@ -63,7 +79,7 @@ contract VoteSystem {
     function make_voter(address _who) private
     {
         voters[_who].balance += msg.value;
-        voters[_who].timestamp = now;
+        voters[_who].timestamp = block.number;
     }
     
     
