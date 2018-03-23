@@ -4,6 +4,8 @@ pragma solidity ^0.4.18;
 
 contract VoteSystem {
     
+    event AnnounceResult(bytes _result);
+    
     uint256 public vote_duration = 345600; // 5760 blocks/day >> 5760 * 30 * 2 = 345600 blocks/2months.
     uint256 public stake_withdrawal_delay = 10000;
     uint256 public last_vote_index = 0;
@@ -48,10 +50,15 @@ contract VoteSystem {
     
     struct voter
     {
-        uint256 balance;
-        uint256 timestamp;
+        uint256 balance;     // Voters locked funds. Used for `weight` calculation and funds claimbacks.
+        uint256 timestamp;   // Last action block number. Used for claimback delay calculation.
     }
     
+    /**
+    * @dev Fallback function.
+    *      Reverts invalid invocations (data not null or 0 << msg.value) to prevent accidental contract calls.
+    *      Makes msg.sender a voter on fund deposit.
+    */
     function() payable
     {
         assert(msg.data.length == 0);
@@ -59,14 +66,36 @@ contract VoteSystem {
         make_voter(msg.sender);
     }
     
+    
+    /**
+    * @dev Creates a new proposal object.
+    *
+    * @param _description  Brief summary of what this proposal is intended to be.
+    */
     function submit_vote_proposal(string _description) payable
     {
         require(msg.value >= voting_threshold);
         make_voter(msg.sender);
         vote_proposals[last_vote_index].master = msg.sender;
         vote_proposals[last_vote_index].description = _description;
+        result memory _result = result("none", false, 0x00, "", 0);
+        vote_proposals[last_vote_index].results.push(_result);
+        last_vote_index++;
     }
     
+    /**
+    * @dev Configures a newly created proposal object before opening for voting.
+    *
+    * @param _id           Proposal identificator.
+    * @param _name         Name of the voting option, which will be added to the proposal.
+    * @param _transaction  In case of a successful vote for this option,
+    *                      will the transaction be issued or not.
+    *                      true  >> if this option will win the vote then a transaction will be executed.
+    *                      false >> if this option will win the vote then an event will be emmited.
+    * @param _to           Address that will be called if the option result is a transaction.
+    * @param _data         Data of the transaction that will be executed on behalf of this contract
+    *                      if the option result is a transaction.
+    */
     function add_voting_option(uint256 _id, string _name, bool _transaction, address _to, bytes _data) only_proposal_creator(_id)
     {
         result memory _result = result(_name, _transaction, _to, _data, 0);
