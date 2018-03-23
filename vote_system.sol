@@ -55,7 +55,7 @@ contract VoteSystem {
     {
         require(vote_proposals[_id].master == msg.sender);
         
-        result  _result = result(_name, _transaction, _to, _data);
+        result memory _result = result(_name, _transaction, _to, _data);
         vote_proposals[_id].results.push(_result);
     }
     
