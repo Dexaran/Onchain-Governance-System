@@ -6,6 +6,8 @@ contract VoteSystem {
     uint256 public last_vote_index = 0;
     uint256 public voting_threshold = 10e19; // 10 ETC.
     
+    mapping (address => bool) muted; // Prevents recursive calls.
+    
     mapping (uint256 => proposal) public vote_proposals;
     
     mapping (address => voter)  public voters;
@@ -52,9 +54,15 @@ contract VoteSystem {
         make_voter(msg.sender);
     }
     
+    function withdraw_stake() mutex(msg.sender)
+    {
+        msg.sender.transfer(voters[msg.sender].balance);
+        voters[msg.sender].balance = 0;
+    }
+    
     function make_voter(address _who) private
     {
-        voters[_who].balance = msg.value;
+        voters[_who].balance += msg.value;
         voters[_who].timestamp = now;
     }
     
@@ -65,6 +73,19 @@ contract VoteSystem {
     {
         require(msg.sender == address(this));
         _;
+    }
+    
+    // Mutex to prevent recursive calls.
+    modifier mutex(address _target)
+    {
+        if( muted[_target] )
+        {
+            revert();
+        }
+        
+        muted[_target] = true;
+        _;
+        muted[_target] = false;
     }
     
     function change_vote_duration(uint256 _new_duration) only_self
