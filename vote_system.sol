@@ -51,20 +51,18 @@ contract VoteSystem {
         make_voter(msg.sender);
     }
     
-    function add_voting_option(uint256 _id, string _name, bool _transaction, address _to, bytes _data)
+    function add_voting_option(uint256 _id, string _name, bool _transaction, address _to, bytes _data) only_proposal_creator(_id)
     {
-        require(vote_proposals[_id].master == msg.sender);
-        
         result memory _result = result(_name, _transaction, _to, _data);
         vote_proposals[_id].results.push(_result);
     }
     
-    function start_vote_proposal()
+    function start_vote_proposal( uint256 _id, uint256 _result_id ) only_proposal_creator(_id)
     {
         
     }
     
-    function cast_vote(uint256 _voting_index, uint256 _voting_result) payable
+    function cast_vote( uint256 _id, uint256 _result_id ) payable
     {
         make_voter(msg.sender);
     }
@@ -84,6 +82,12 @@ contract VoteSystem {
     
     
     // DEBUGGING FUNCTIONALITY.
+    
+    modifier only_proposal_creator(uint256 _id)
+    {
+        require(vote_proposals[_id].master == msg.sender);
+        _;
+    }
     
     modifier only_self
     {
@@ -107,5 +111,10 @@ contract VoteSystem {
     function change_vote_duration(uint256 _new_duration) only_self
     {
         vote_duration = _new_duration;
+    }
+    
+    function change_stake_withdrawal_delay(uint256 _new_delay) only_self
+    {
+        stake_withdrawal_delay = _new_delay;
     }
 }
