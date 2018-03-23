@@ -128,15 +128,21 @@ contract VoteSystem {
         vote(_id, _result_id, msg.sender);
     }
     
+    /**
+    * @dev Evaluates a proposal after the voting is complete.
+    *
+    * @param _id           Proposal that will be evaluated.
+    */
     function evaluate_proposal(uint256 _id)
     {
-        require( !is_active(_id) );
+        require( !is_active(_id) ); // Do not allow to finalise a proposal is not yet finished.
         
-        uint256 _max_voteweight = vote_proposals[_id].results[0].weight;
-        uint256 _winner_id      = 0;
+        uint256 _max_voteweight = vote_proposals[_id].results[0].weight; // Top voted proposal option weight.
+        uint256 _winner_id      = 0;                                     // Array index of top voted proposal option.
         
         for (uint i=1; i < vote_proposals[_id].results.length; i++)
         {
+            // Evaluating the proposal retults.
             if(vote_proposals[_id].results[i].weight > _max_voteweight)
             {
                 _max_voteweight = vote_proposals[_id].results[i].weight;
@@ -144,10 +150,12 @@ contract VoteSystem {
             }
         }
         
+        // Execute a transaction if the top voted proposal option is a transaction.
         if(vote_proposals[_id].results[_winner_id].transaction)
         {
             vote_proposals[_id].results[_winner_id].to.call.value(0)(vote_proposals[_id].results[_winner_id].data);
         }
+        // Announce results including transaction data.
         AnnounceResult(_id, _winner_id, vote_proposals[_id].results[_winner_id].data);
     }
     
