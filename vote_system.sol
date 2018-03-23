@@ -102,6 +102,12 @@ contract VoteSystem {
         vote_proposals[_id].results.push(_result);
     }
     
+    /**
+    * @dev Submits a configured proposal for voting. Auto votes with creators stake instantly..
+    *
+    * @param _id           Proposal identificator.
+    * @param _result_id    Result option that author is willing to vote for.
+    */
     function activate_vote_proposal( uint256 _id, uint256 _result_id ) only_proposal_creator(_id)
     {
         vote_proposals[last_vote_index].active = true;
