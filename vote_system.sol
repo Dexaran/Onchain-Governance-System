@@ -20,6 +20,7 @@ contract VoteSystem {
         
         address to;
         bytes   data;
+        uint256 weight; // how much this is voted FOR
         //uint256 value;    // always 0 for ETC votes.
     }
     
@@ -55,19 +56,22 @@ contract VoteSystem {
     
     function add_voting_option(uint256 _id, string _name, bool _transaction, address _to, bytes _data) only_proposal_creator(_id)
     {
-        result memory _result = result(_name, _transaction, _to, _data);
+        result memory _result = result(_name, _transaction, _to, _data, 0);
         vote_proposals[_id].results.push(_result);
     }
     
-    function start_vote_proposal( uint256 _id, uint256 _result_id ) only_proposal_creator(_id)
+    function activate_vote_proposal( uint256 _id, uint256 _result_id ) only_proposal_creator(_id)
     {
-        
+        vote_proposals[last_vote_index].active = true;
+        vote_proposals[last_vote_index].timestamp = block.number;
+        vote(_id, _result_id, msg.sender);
     }
     
     function cast_vote( uint256 _id, uint256 _result_id ) payable
     {
         require( is_active(_id) );
         make_voter(msg.sender);
+        vote(_id, _result_id, msg.sender);
     }
     
     function is_active(uint256 _id) constant returns (bool)
@@ -86,6 +90,12 @@ contract VoteSystem {
     {
         voters[_who].balance += msg.value;
         voters[_who].timestamp = block.number;
+    }
+    
+    function vote(uint256 _id, uint256 _result_id, address _who) private
+    {
+        vote_proposals[_id].results[_result_id].weight += voters[_who].balance;
+        //voters[_who].timestamp = block.number;
     }
     
     
