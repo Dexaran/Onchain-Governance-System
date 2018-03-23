@@ -19,18 +19,18 @@ contract VoteSystem {
     
     struct result
     {
-        string option_name; // This is displayed to end user "Do you want to vote for <option_name>?".
-        bool transaction;   // True = execute a transaction, false = cast an event.
+        string   option_name; // This is displayed to end user "Do you want to vote for <option_name>?".
+        bool     transaction; // True = execute a transaction, false = cast an event.
         
-        address to;         // Address that will be called if the voting
-                            // is intended to end with a transaction execution.
+        address  to;          // Address that will be called if the voting
+                              // is intended to end with a transaction execution.
                             
-        bytes   data;       // Transaction `dat`a if the voting is intended 
-                            // to end with a transaction execution.
+        bytes    data;        // Transaction `dat`a if the voting is intended 
+                              // to end with a transaction execution.
                             
-        uint256 weight;     // How much this is voted FOR.
+        uint256  weight;      // How much this is voted FOR.
         
-        //uint256 value;    // Always 0 for ETC votes.
+        //uint256 value;      // Always 0 for ETC votes.
     }
     
     struct proposal
@@ -78,7 +78,7 @@ contract VoteSystem {
         make_voter(msg.sender);
         vote_proposals[last_vote_index].master = msg.sender;
         vote_proposals[last_vote_index].description = _description;
-        result memory _result = result("none", false, 0x00, "", 0);
+        result memory _result =         result("none", false, 0x00, "", 0);
         vote_proposals[last_vote_index].results.push(_result);
         last_vote_index++;
     }
@@ -137,6 +137,7 @@ contract VoteSystem {
     {
         require( !is_active(_id) ); // Do not allow to finalise a proposal is not yet finished.
         
+        vote_proposals[_id].active = false;
         uint256 _max_voteweight = vote_proposals[_id].results[0].weight; // Top voted proposal option weight.
         uint256 _winner_id      = 0;                                     // Array index of top voted proposal option.
         
@@ -159,11 +160,21 @@ contract VoteSystem {
         AnnounceResult(_id, _winner_id, vote_proposals[_id].results[_winner_id].data);
     }
     
+    /**
+    * @dev Evaluates if a proposal is currently active or not.
+    *
+    * @param  _id   Proposal that will be evaluated.
+    * @return       True if the proposal is currently available for voting, false if the proposal
+    *               is not available for voting.
+    */
     function is_active(uint256 _id) constant returns (bool)
     {
         return ( vote_proposals[_id].active && ( vote_proposals[_id].timestamp < block.timestamp + vote_duration ) );
     }
     
+    /**
+    * @dev Requests vating funds back from voting contract.
+    */
     function withdraw_stake() mutex(msg.sender)
     {
         require(voters[msg.sender].timestamp < vote_duration + stake_withdrawal_delay);
