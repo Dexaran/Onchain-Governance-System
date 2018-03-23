@@ -45,10 +45,12 @@ contract VoteSystem {
         make_voter(msg.sender);
     }
     
-    function submit_vote_proposal() payable
+    function submit_vote_proposal(string _description) payable
     {
         require(msg.value >= voting_threshold);
         make_voter(msg.sender);
+        vote_proposals[last_vote_index].master = msg.sender;
+        vote_proposals[last_vote_index].description = _description;
     }
     
     function add_voting_option(uint256 _id, string _name, bool _transaction, address _to, bytes _data) only_proposal_creator(_id)
@@ -64,7 +66,13 @@ contract VoteSystem {
     
     function cast_vote( uint256 _id, uint256 _result_id ) payable
     {
+        require( is_active(_id) );
         make_voter(msg.sender);
+    }
+    
+    function is_active(uint256 _id) constant returns (bool)
+    {
+        return ( vote_proposals[_id].active && ( vote_proposals[_id].timestamp < block.timestamp + vote_duration ) );
     }
     
     function withdraw_stake() mutex(msg.sender)
