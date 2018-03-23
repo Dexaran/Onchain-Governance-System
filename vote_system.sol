@@ -6,10 +6,13 @@ contract VoteSystem {
     
     event AnnounceResult(uint256 indexed id, uint256 indexed vote_option, bytes result);
     
-    uint256 public vote_duration = 345600; // 5760 blocks/day >> 5760 * 30 * 2 = 345600 blocks/2months.
-    uint256 public stake_withdrawal_delay = 10000;
-    uint256 public last_vote_index = 0;
-    uint256 public voting_threshold = 10e19; // 10 ETC.
+    uint256 public vote_duration = 345600;         // 5760 blocks/day >> 5760 * 30 * 2 = 345600 blocks/2months.
+    
+    uint256 public stake_withdrawal_delay = 10000; // How long (in blocks) a user can not withdraw his funds
+                                                   // after taking any actions.
+                                                   
+    uint256 public last_vote_index = 0;            // Last proposal index.
+    uint256 public voting_threshold = 10e19;       // 10 ETC.
     
     mapping (address => bool)     muted; // Prevents recursive calls.
     
