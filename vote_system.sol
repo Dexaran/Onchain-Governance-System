@@ -222,6 +222,11 @@ contract VoteSystem {
         muted[_target] = false;
     }
     
+    /**
+    * @dev Changes the default voting duration (in blocks).
+    *
+    * @param  _new_duration   A new number of blocks, during which each proposal will be available for voting.
+    */
     function change_vote_duration(uint256 _new_duration) only_self
     {
         vote_duration = _new_duration;
