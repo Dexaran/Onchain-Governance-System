@@ -25,6 +25,7 @@ contract VoteSystem {
         result[] results;
         string   description;
         uint256  timestamp;
+        bool     active;
     }
     
     struct voter
@@ -33,15 +34,28 @@ contract VoteSystem {
         uint256 timestamp;
     }
     
+    function() payable
+    {
+        assert(msg.data.length == 0);
+        assert(msg.value > 0);
+        make_voter(msg.sender);
+    }
+    
     function submit_vote() payable
     {
         require(msg.value >= voting_threshold);
-        
+        make_voter(msg.sender);
     }
     
     function cast_vote(uint256 _voting_index, uint256 _voting_result) payable
     {
-        
+        make_voter(msg.sender);
+    }
+    
+    function make_voter(address _who) private
+    {
+        voters[_who].balance = msg.value;
+        voters[_who].timestamp = now;
     }
     
     
