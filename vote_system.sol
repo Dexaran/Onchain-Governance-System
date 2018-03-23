@@ -232,6 +232,13 @@ contract VoteSystem {
         vote_duration = _new_duration;
     }
     
+    /**
+    * @dev Changes the default funds withdrawal delay (in blocks).
+    *
+    * @param  _new_delay   A new number of blocks
+    *                      during which the user can not withdraw his funds
+    *                      after taking any action (voted, opened a new proposal).
+    */
     function change_stake_withdrawal_delay(uint256 _new_delay) only_self
     {
         stake_withdrawal_delay = _new_delay;
